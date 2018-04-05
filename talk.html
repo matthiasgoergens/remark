@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Even more static visualization of sorting algorithms
+
+---
+
+# Agenda
+
+1. Introduction
+2. Deep-dive
+3. ...
+
+---
+
+# Hungarians
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lyZQPjUT5B4?rel=0&start=50" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+---
+
+# Animations
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/BeoCbJPuvSE?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+???
+
+After what percentage of time is half of the array sorted?
+
+Can you find an element that moved about half the length of the array to reach its final destination?
+
+What percentage of the array was sorted after 80% of the sorting process? How about 20%?
+
+Does the number of sorted elements grow linearly or non-linearly with time (i.e. logarithmically or exponentially)?
+
+---
+
+# SortVis - Insertion Sort - 20 Elements
+
+<img src="insertionsort20.png" height="100%" width="100%" />
+
+---
+
+# SortVis - QuickSort - 20 Elements
+
+<img src="quicksort20.png" height="100%" width="100%" />
+
+---
+
+# SortVis - QuickSort - 200 Elements
+
+<img src="quicksort200.png" height="100%" width="100%" />
+
+---
+
+# Static - QuickSort - 500 Elements
+
+<img src="quick_random_xy_500.png" height="500" width="500" />
+
+---
+
+# Static - QuickSelect - 500 Elements
+
+<img src="quickselect_random_xy_500.png" height="500" width="500" />
+
+---
+
+```bash
+git clone git@github.com:matthiasgoergens/static-sorting-visualisation.git
+cd static-sorting-visualisation.git
+stack install
+static-sorting-visualisation-exe images/quick_random_xy_500.png
+# A default collection of images:
+static-sorting-visualisation-exe
+```
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
