@@ -21,77 +21,250 @@
 
 class: center, middle
 
-# Even more static visualization of sorting algorithms
+# Range maps
+
+![Skyline](skyline.gif)
+
+![Calendar](Singapore-public-holiday-calendar-2018.png)
 
 ---
-
 # Agenda
 
-1. Introduction
-2. Deep-dive
-3. ...
+* A Simple Linear Data Type and its Operations
+* Random Access via Binary Search Trees
+* Generalizing End Points
+* Testing
+---
+
+# A Simple Linear Datatype
+```haskell
+data StepFn k a = Const a | Jump a k (StepFn k a)
+```
+    2 ------------
+```haskell
+Const 2
+```
+```elixir
+# Elixir
+{:const, 2}
+```
+    3       +----
+    2       |    |
+    1 ------     |
+    0            +----
+            k    l
+```haskell
+Jump 1 k (Jump 3 l (Const 0))
+```
+```elixir
+# Elixir
+{:jump, 1, k, {:jump, 3, l, {:const, 0}}}
+```
+---
+
+# Construction
+
+```haskell
+data StepFn k a = Const a | Jump a k (StepFn k a)
+```
+```haskell
+rectangle :: a -> k -> a -> k -> StepFn k a
+rectangle outside left content right =
+  Jump outside left (Jump content right (Const outside))
+```
+    3       +----
+    2       |    |
+    1       |    |
+    0 ------     +----
+            k    l
+```haskell
+rectangle 0 k 3 l
+```
+---
+
+# Lookup
+
+```haskell
+data StepFn k a = Const a | Jump a k (StepFn k a)
+
+toFn :: Ord k => StepFn k a -> (k -> a)
+toFn (Const a) query = a
+toFn (Jump a k rest) query
+  | query < k = a
+  | otherwise = toFn rest query
+
+lookup k stepFunction = toFn stepFunction k
+```
+```elixir
+# Elixir
+def lookup(query, {:const, a}), do: a
+def lookup(query, {:jump, a, k, rest}), do
+  cond do
+    query < k ->
+      a
+    true ->
+      lookup(query, rest)
+  end
+end
+```
+---
+# Lookup
+
+```haskell
+data StepFn k a = Const a | Jump a k (StepFn k a)
+
+toFn :: Ord k => StepFn k a -> (k -> a)
+toFn (Const a) query = a
+toFn (Jump a k rest) query
+  | query < k = a
+  | otherwise = toFn rest query
+
+lookup k stepFunction = toFn stepFunction k
+```
+## Example
+    3       +------
+    2       |     |
+    1 ------      |
+    0             +----
+            k  q  l
+```haskell
+lookup q (Jump 1 k (Jump 3 l (Const 0)))
+```
+---
+
+# Skyline problem
+
+```haskell
+data StepFn k a = Const a | Jump a k (StepFn k a)
+
+merge2 :: Ord k => (a -> b -> c) -> StepFn k a -> StepFn k b -> StepFn k c
+merge2 op (Const a) (Const b) = Const (op a b)
+merge2 op (Jump a k rest) (Const b) = Jump (op a b) k (merge2 op rest (Const b))
+merge2 op (Const a) (Jump b k rest) = Jump (op a b) k (merge2 op (Const a) rest)
+merge2 op (Jump a kA restA) (Jump b kB restB) =
+  Jump (op a b) (min kA kB)
+  (case compare kA kB of
+      LT -> merge2 op restA (Jump b kB restB)
+      EQ -> merge2 op restA restB
+      GT -> merge2 op (Jump a kA restA) restB)
+
+merge :: Ord k => (a -> a -> a) -> [StepFn k a] -> StepFn k a
+merge op default_ [] = default_
+merge op [fn] = merge2 op default_ fn
+merge op defalut fn's = mergeAll op default (pairUp op fn's)
+
+pairUp :: Ord k => (a -> a -> a) -> [StepFn k a] -> [StepFn k a]
+pairUp op (fn1 : fn2 : fn's) = merge op fn1 fn2 : pair op fn's
+pairUp op fn's = fn's
+```
 
 ---
 
-# Hungarians
+# Skyline problem continued
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/lyZQPjUT5B4?rel=0&start=50" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
+```haskell
+computeSkyline :: [(Int, Int, Int)] -> [(Int, Int, Int)]
+computeSkyline buildings =
+  let singles = map (\(l, h, r) -> rectangle 0 l h r) buildings
+      skyline = mergeAll max (Const 0) singles
+      convert (Jump _ left (Jump height right rest)) =
+          (left, height, right) : convert (Jump height right rest)
+      convert _ = []
+   in convert skyline
+```
+![Skyline](skyline.gif)
+```haskell
+example = [( 1,11, 5),  (2, 6,7),  ( 3,13, 9), (12, 7,16),
+           (14, 3,25), (19,18,22), (23,13,29), (24, 4,28)]
+```
 ---
 
-# Animations
+Random Access - Binary Search Trees
+=============
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BeoCbJPuvSE?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+```haskell
+toFn :: Ord k => StepFn k a -> (k -> a)
+toFn (Const a) query = a
+toFn (Jump a k rest) query
+  | query < k = a
+  | otherwise = toFn rest query
+```
 
-???
+![Binary Search Tree](Binary_search_tree.svg)
 
-After what percentage of time is half of the array sorted?
+```haskell
+lookupLT :: Ord k => k -> Map k v -> Maybe (k, v)
+```
 
-Can you find an element that moved about half the length of the array to reach its final destination?
-
-What percentage of the array was sorted after 80% of the sorting process? How about 20%?
-
-Does the number of sorted elements grow linearly or non-linearly with time (i.e. logarithmically or exponentially)?
-
----
-
-# SortVis - Insertion Sort - 20 Elements
-
-<img src="insertionsort20.png" height="100%" width="100%" />
-
----
-
-# SortVis - QuickSort - 20 Elements
-
-<img src="quicksort20.png" height="100%" width="100%" />
+O(log n). Find largest key smaller than the given one and return the corresponding (key, value) pair.
 
 ---
+Generalizing half-open intervals
+================================
 
-# SortVis - QuickSort - 200 Elements
+```haskell
+toFn :: Ord k => StepFn k a -> (k -> a)
+toFn (Const a) query = a
+toFn (Jump a k rest) query
+  | query < k = a
+  | otherwise = toFn rest query
+```
+```haskell
+toFn query          (Jump left k          (Const right))
+```
+          +-right-
+          |
+          |
+    -left-
 
-<img src="quicksort200.png" height="100%" width="100%" />
-
+           -right-
+          |
+          |
+    -left-+
+```haskell
+toFn (query, False) (Jump left (k, False) (Const right))
+toFn (query, False) (Jump left (k, True)  (Const right))
+```
 ---
+Generalizing half-open intervals
+================================
 
-# Static - QuickSort - 500 Elements
+```haskell
+toFn :: Ord k => StepFn k a -> (k -> a)
+toFn (Const a) query = a
+toFn (Jump a k rest) query
+  | query < k = a
+  | otherwise = toFn rest query
+```
 
-<img src="quick_random_xy_500.png" height="500" width="500" />
-
+    3       +
+    2       |    +----+
+    1        ----     |
+    0 ------           --
+            k    l    m
+```haskell
+Jump 0 (k, False) (Jump 3 (k, True)
+  (Jump 1 (l, False) (Jump 2 (m, True)
+    (Const 0))))
+```
 ---
+# Testing
 
-# Static - QuickSelect - 500 Elements
-
-<img src="quickselect_random_xy_500.png" height="500" width="500" />
-
----
-
-```bash
-git clone git@github.com:matthiasgoergens/static-sorting-visualisation.git
-cd static-sorting-visualisation.git
-stack install
-static-sorting-visualisation-exe images/quick_random_xy_500.png
-# A default collection of images:
-static-sorting-visualisation-exe
+Test pointwise for merge2:
+```haskell
+forall (\op fn1 fn2 ->
+  op (lookup query fn1) (lookup query fn2)
+  ===
+  lookup query (merge2 op fn1 fn2))
+```
+And test pointwise for merge:
+```haskell
+forall (\op z fn's ->
+  foldr op z
+    (map lookup query fn's)
+  ===
+  lookup query
+    (merge op (Const z) fn's))
 ```
 
     </textarea>
